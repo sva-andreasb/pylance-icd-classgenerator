@@ -6,8 +6,9 @@ generates Folder Structure for pylance
 import os
 import shutil
 import zipfile
+import re
 icdLocation = "C:\\IBM\\SMP"
-jdkLocation = ""
+jdkHierarchy = "Class Hierarchy (Java Platform SE 8 ).html"
 
 shutil.rmtree(os.path.join(os.getcwd(),"classes"), ignore_errors=True)
 
@@ -38,6 +39,17 @@ def makeDir(filename,location):
             f.close()
     except:
         print('error on ' + str(os.path.join(newPath,classname)))
+def makeJavaDir(classpath,classname):
+    classpath = (os.path.sep).join(classpath.split("."))
+    newPath = os.path.join(os.getcwd(),"classes",classpath)
+    try:
+        os.makedirs(newPath, exist_ok=True)
+        with open(os.path.join(newPath,classname+".py"), "w") as f:
+            #print(os.path.join(newPath,classname))
+            f.write("")
+            f.close()
+    except:
+        print('error on ' + str(os.path.join(newPath,classname)))
 def get_jar_classes(jar_file):
     classes = []
     """prints out .class files from jar_file"""
@@ -52,6 +64,7 @@ def get_jar_classes(jar_file):
         zf.close()
     return classes
 
+
 classDirs = []
 classDirs.append(os.path.join(icdLocation,"maximo", "applications", "maximo", "businessobjects", "classes"))
 classDirs.append(os.path.join(icdLocation,"maximo", "applications", "maximo", "maximouiweb", "webmodule","WEB-INF","classes"))
@@ -60,6 +73,21 @@ libDir = os.path.join(icdLocation,"maximo", "applications", "maximo", "lib")
 
 i = 0
 x = 0
+with open(os.path.join(os.getcwd(),jdkHierarchy),"r") as f:
+    jdkContent = f.read()
+    result = re.search("<div class=\"contentContainer\">(.*)</div>",jdkContent,re.DOTALL)
+    if result:
+        liMatcher = re.compile("<li.*>(.+)<a.*><span.*>(.+)</span></a>")
+        for line in result.group(1).split("\n"):
+            lineresult = liMatcher.match(line)
+            if lineresult:
+                makeJavaDir(lineresult.group(1),lineresult.group(2))
+                i += 1
+                x += 1
+                if i == 1000:
+                    print(x)
+                    i=0
+
 for classDir in classDirs:
     # r=root, d=directories, f = files
     for r, d, f in os.walk(classDir):
