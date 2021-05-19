@@ -66,10 +66,7 @@ def get_jar_classes(jar_file):
 
 
 classDirs = []
-classDirs.append(os.path.join(icdLocation,"maximo", "applications", "maximo", "businessobjects", "classes"))
-classDirs.append(os.path.join(icdLocation,"maximo", "applications", "maximo", "maximouiweb", "webmodule","WEB-INF","classes"))
-classDirs.append(os.path.join(icdLocation,"maximo", "applications", "maximo", "commonweb", "classes"))
-libDir = os.path.join(icdLocation,"maximo", "applications", "maximo", "lib")
+classDirs.append(os.path.join(icdLocation,"maximo", "applications", "maximo", "businessobjects", "classes")) classDirs.append(os.path.join(icdLocation,"maximo", "applications", "maximo", "maximouiweb", "webmodule","WEB-INF","classes")) classDirs.append(os.path.join(icdLocation,"maximo", "applications", "maximo", "commonweb", "classes")) libDir = os.path.join(icdLocation,"maximo", "applications", "maximo", "lib")
 
 i = 0
 x = 0
