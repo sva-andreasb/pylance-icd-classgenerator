@@ -7,7 +7,7 @@ import os
 import shutil
 import re
 import itertools
-
+import traceback
 import subprocess
 import concurrent.futures
 
@@ -23,7 +23,7 @@ class Decompile(object):
     packre = re.compile("package ([\w\.]+);")
     classre = re.compile("public .*class (\w*)")
     interfacere = re.compile("public interface (\w*)")
-    constantre = re.compile(".*public static final ([\w\[\]<>,]+ )(\w+) = \"*(.*)\"*;")
+    constantre = re.compile(".*public static final ([\w\[\]<>,]+ )(\w+) = (.*);$")
     functionre = re.compile(".*(public (?:[\w\[\]<>,]+ )*(\w*)\(.*\))(?: throws .*)* {")
     def __init__(self, filepath):
         self.jar = filepath
@@ -94,7 +94,7 @@ class Decompile(object):
                     constantmatch = self.constantre.match(line)
                     if constantmatch:
                         constant = constantmatch.group(2)
-                        packages[curPackage][curClass]["constants"][constant] = constantmatch.group(2) + " = \"" + constantmatch.group(1) + " " + constantmatch.group(3) + "\""
+                        packages[curPackage][curClass]["constants"][constant] = constantmatch.group(2) + " = \"" + constantmatch.group(1) + " " + constantmatch.group(3).replace('"','\\"') + "\""
             infile.close()
 
             print(str(self.id) + " writing out file")
@@ -111,10 +111,15 @@ class Decompile(object):
                                 for constant in packages[pack][curclass]["constants"]:
                                     f.write(packages[pack][curclass]["constants"][constant] + "\n")
                                 for function in packages[pack][curclass]["function"]:        
-                                    f.write("def " + function + "():\n\'\'\'")
+                                    f.write("def " + function + "():\n    \'\'\'")
+                                    first = True
                                     for line in packages[pack][curclass]["function"][function]:
-                                        f.write(line+"\n")
-                                    f.write("\'\'\'\npass\n")
+                                        if first:
+                                            f.write(line+"\n")
+                                            first = False
+                                        else:
+                                            f.write("    "+line+"\n")
+                                    f.write("    \'\'\'\n")
                                 f.close()
                                 print(str(self.id) + " finished file")
                             retPacks.append(pack+"."+ curclass)
@@ -200,8 +205,6 @@ def main():
                     if i == 1000:
                         print(x)
                         i=0
-                    else:
-                        print("file " + os.path.join(r,filename) + " took to long, ignoring")
     print("classes", x, len(toDecompile))
     for r, d, f in os.walk(libDir):
         for filename in f:
@@ -229,6 +232,10 @@ def main():
                 else:
                     print("No Task found")
             except Exception as e:
-                print("Exception " + str(type(e)) + ": ", e)
+                if task:
+                    print(task.id,"Exception " + str(type(e)) + ": ", e)
+                else:
+                    print("Exception " + str(type(e)) + ": ", e)
+                traceback.print_exc()
 if __name__ == '__main__':
     main()
